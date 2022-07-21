@@ -1,0 +1,15 @@
+{
+  "name": "foil-status",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "build:txt": "node index.js > results.txt"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "d3": "6.7.0",
+    "dotenv": "^16.0.1"
+  }
+}
