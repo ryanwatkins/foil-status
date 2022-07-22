@@ -279,14 +279,6 @@ async function start() {
   const remainingReports = complaints.filter(complaint => !receivedReports.map(r => r.complaint_id).includes(complaint))
   const complaintsPending = remainingReports.filter(complaint => isComplaintPending(mapping.complaints[complaint]))
 
-  // summary info
-  console.log('Officers requested:', officers.length)
-  console.log('Complaints for officers requested:', complaints.length)
-  console.log('Complaints for officers remaining:', remainingReports.length)
-  console.log('Complaints remaining, pending APU decision:', complaintsPending.length)
-  console.log('Complaint Closing Reports received:', receivedReports.length) // we have reports we did not request from other sources
-  console.log('FOIL requests:', foilIds.length)
-
   report.summary = {
     officers: officers.length,
     requested: complaints.length,
@@ -295,14 +287,17 @@ async function start() {
     received: receivedReports.length,
     foils: foilIds.length
   }
+  console.log(JSON.stringify(report.summary, null, 2))
 
   // per officer, per FOIL info
   report.officers = getOfficerStatus({ officers, receivedReports })
   report.foils = getFOILStatus({ foils, receivedReports })
+  report.summary.officersCompleted = report.officers.filter(o => o.complaints.completed).length
+  report.summary.foilsCompleted = report.foils.filter(f => f.complaints.completed).length
 
-//  await fs.writeFile('report.json', JSON.stringify(report, null, 2))
-//  json = await fs.readFile('report.json')
-//  report = JSON.parse(json)
+  // await fs.writeFile('report.json', JSON.stringify(report, null, 2))
+  // json = await fs.readFile('report.json')
+  // report = JSON.parse(json)
 
   await buildReportHtml()
 }

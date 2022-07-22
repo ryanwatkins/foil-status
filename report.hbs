@@ -54,19 +54,18 @@
     {{#with summary }}
     <table class="table">
       <tbody>
-      <tr><td>Officers requested:</td><td>{{ officers }}</td></tr>
+      <tr><td><a href="#officers">Officers requested:</a></td><td>{{ officers }}</td></tr>
       <tr><td>Complaints requested:</td><td>{{ requested }}</td></tr>
       <tr><td>Complaints remaining:</td><td>{{ remaining }}</td></tr>
       <tr><td>Complaints pending APU:</td><td>{{ pending }}</td></tr>
-      <tr><td>Closing Reports received:</td><td>{{ received }}</td></tr>
-      <tr><td>FOIL requests:</td><td>{{ foils }}</td></tr>
+      <tr><td>Closing Reports obtained:</td><td>{{ received }}</td></tr>
+      <tr><td><a href="#foils">FOIL requests:</a></td><td>{{ foils }}</td></tr>
+      <tr><td>Officers completed:</td><td>{{ officersCompleted }}</td></tr>
+      <tr><td>FOIL completed:</td><td>{{ foilsCompleted }}</td></tr>
       </tbody>
     </table>
     {{/with }}
 
-    <a href="#officers">view Complaints per Officer</a><br />
-    <a href="#foils">view Complaints per FOIL request</a>
-    <!-- <a href="#reports">view all received Closing Reports</a> -->
     </div>
   </section>
 
