@@ -4,7 +4,7 @@ Loads data from Google Sheet and Google Drive to track the status of
 reports received and reports still waiting on, by Officer and by FOIL
 request.
 
-View "report.html" for current status report.
+View [report.html](https://htmlpreview.github.io/?https://github.com/ryanwatkins/foil-status/blob/main/report.html) for current status report.
 
 ## Setup
 

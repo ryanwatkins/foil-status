@@ -31,8 +31,16 @@
     div.received, div.waiting {
       border-bottom: 1px solid #e0e0e0;
     }
-    p.complaints {
-      columns: 3 auto;
+
+    @media only screen and (max-width: 768px) {
+      p.complaints {
+        columns: 3 auto;
+      }
+    }
+    @media only screen and (min-width: 768px) {
+      p.complaints {
+        columns: 6 auto;
+      }
     }
   </style>
 </head>
@@ -61,7 +69,9 @@
   </section>
 
   <section class="section officers">
-    <h2 class="title officers"><a name="officers">Officers</a></h2>
+    <div class="container">
+      <h2 class="title officers"><a name="officers">Officers</a></h2>
+    </div>
     <div class="container officer">
 
       <p class="officer">
@@ -19874,7 +19884,9 @@
   </section>
 
   <section class="section foils">
-    <h2 class="title foils"><a name="foils">FOILs</a></h2>
+    <div class="container">
+      <h2 class="title foils"><a name="foils">FOILs</a></h2>
+    </div>
     <div class="container foil">
 
       <p class="foil">

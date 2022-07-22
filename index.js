@@ -300,9 +300,9 @@ async function start() {
   report.officers = getOfficerStatus({ officers, receivedReports })
   report.foils = getFOILStatus({ foils, receivedReports })
 
-  // await fs.writeFile('report.json', JSON.stringify(report, null, 2))
-  // json = await fs.readFile('report.json')
-  // report = JSON.parse(json)
+//  await fs.writeFile('report.json', JSON.stringify(report, null, 2))
+//  json = await fs.readFile('report.json')
+//  report = JSON.parse(json)
 
   await buildReportHtml()
 }
