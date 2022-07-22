@@ -1,15 +1,21 @@
 const fs = require('fs').promises
 const d3 = require('d3')
 const axios = require('axios').default
+const Handlebars = require('handlebars')
 
 require('dotenv').config()
-const API_KEY = process.env.DRIVE_API_KEY
 
-let officersByKey = new Map()
+let officersByKey = new Map() // map of officers by name/shield to unique_mos
+let mapping = {} // officer and complaint data
+let report = {
+  summary: {},
+  officers: [],
+  foils: [],
+} // data for report html generation
 
 // for an officer in the spreadsheet,
 // find corresponding officer object in cache
-function findOfficer(mapping, record) {
+function findOfficer(record) {
   // manually match where records are not consistent
   // ex. name changed, made LT+ rank, etc
   const manualMatch = {
@@ -51,12 +57,12 @@ function isComplaintPending(complaint) {
 // load google drive and get list complaint closing reports we've
 // obtained based on filename
 async function loadReports() {
-  if (!API_KEY) {
-    console.error('no API_KEY defined, cannot load reports.  set in .env or environment variable')
+  if (!process.env.DRIVE_API_KEY) {
+    console.error('no DRIVE_API_KEY defined, cannot load reports.  set in .env or environment variable')
     process.exit()
   }
 
-  const response = await axios(`https://www.googleapis.com/drive/v3/files?q='1GiTvSKGMh--3llPxYJq_qIbTlPk-O7Z2'+in+parents&key=${API_KEY}&pageSize=1000`)
+  const response = await axios(`https://www.googleapis.com/drive/v3/files?q='1GiTvSKGMh--3llPxYJq_qIbTlPk-O7Z2'+in+parents&key=${process.env.DRIVE_API_KEY}&pageSize=1000`)
   const data = response.data
 
   let reports = []
@@ -71,7 +77,7 @@ async function loadReports() {
 
   for await (const folder of folders) {
     // const FOIL_ID = folder.id
-    const response = await axios(`https://www.googleapis.com/drive/v3/files?q='${folder.id}'+in+parents&key=${API_KEY}&pageSize=1000`)
+    const response = await axios(`https://www.googleapis.com/drive/v3/files?q='${folder.id}'+in+parents&key=${process.env.DRIVE_API_KEY}&pageSize=1000`)
     const data = response.data
 
     const files = data.files.filter(file => {
@@ -93,7 +99,7 @@ async function loadReports() {
 
 // load google sheet of officers, filter to ones that have been FOILed
 // find any provided FOIL id and also find the officer in the lookup table
-async function loadRequests(mapping) {
+async function loadRequests() {
   const response = await axios(`https://docs.google.com/spreadsheets/d/1VoCHoMXiR5OHhoYrwaIJxGPwKiLpYT8et3fux13cfGo/export?format=csv&gid=1431660392`)
   const data = response.data
 
@@ -118,7 +124,7 @@ async function loadRequests(mapping) {
 
   records.forEach(record => {
     const foil_id = record.foil_id || 'BLANK' // we dont have a FOIL ID for all our requests in the spreadsheet
-    const officer = findOfficer(mapping, record)
+    const officer = findOfficer(record)
 
     if (!foils[foil_id]) {
       foils[foil_id] = {
@@ -143,9 +149,11 @@ async function loadRequests(mapping) {
 
   let officers = new Set()
   records.forEach(record => {
-    const officer = findOfficer(mapping, record)
+    const officer = findOfficer(record)
     if (officer) {
       officers.add(officer.unique_mos)
+    } else {
+      console.error('could not find officer:', record)
     }
   })
 
@@ -155,47 +163,56 @@ async function loadRequests(mapping) {
   }
 }
 
-// show the status of reports received for all officers in that FOIL request
-function showFOILStatus({ foils, receivedReports, mapping }) {
-  console.log('FOIL STATUS:')
-  foils.forEach(request => {
-    console.log(request.foil_id)
-    let complaints = new Set()
-    if (request.officers) {
-      request.officers.forEach(officer_id => {
-        const officer = mapping.officers[officer_id]
-        console.log("  ", `${officer.last_name}, ${officer.first_name}`, `https//50-a.org/${officer.unique_mos}`)
-        officer.complaints.forEach(item => complaints.add(item))
-      })
-    }
-    showComplaintsStatus({ complaints, receivedReports, mapping})
-  })
-}
-
-// show the status of reports received for all of the officers complaints
-function showOfficerStatus({ officers, receivedReports, mapping }) {
-  console.log('OFFICER STATUS:')
-  officers = officers.map(officer => mapping.officers[officer])
-  officers.sort((a,b) => {
+// gets the status of reports received for all of the officers complaints
+function getOfficerStatus({ officers, receivedReports }) {
+  let response = officers.map(officer => mapping.officers[officer])
+  response.sort((a,b) => {
     if (a.last_name > b.last_name) return 1
     if (a.last_name < b.last_name) return -1
     if (a.first_name > b.first_name) return 1
     if (a.first_name < b.first_name) return -1
     return 0
   })
-  officers.forEach(officer => {
-    console.log(`${officer.last_name}, ${officer.first_name}`, `https//50-a.org/${officer.unique_mos}`)
-    showComplaintsStatus({ complaints: officer.complaints, receivedReports, mapping })
+
+  response = response.map(officer => {
+    return {
+      ...officer,
+      complaints: getComplaintsStatus({ complaints: officer.complaints, receivedReports })
+    }
   })
+
+  return response
 }
 
-// show the status of a set of complaints:
+// show the status of reports received for all officers in that FOIL request
+function getFOILStatus({ foils, receivedReports }) {
+  let response = foils.map(foil => {
+    let complaints = new Set()
+    let officers = foil.officers.map(id => {
+      let officer = mapping.officers[id]
+      officer.complaints.forEach(id => complaints.add(id))
+      return mapping.officers[id]
+    })
+
+    return {
+      foil_id: foil.foil_id,
+      officers,
+      complaints: getComplaintsStatus({ complaints: complaints, receivedReports })
+    }
+  })
+
+  return response
+}
+
+// get the status of a set of complaints:
 // received, waiting, if pending APU, if we have all of them
-function showComplaintsStatus({ complaints, receivedReports, mapping}) {
+function getComplaintsStatus({ complaints, receivedReports }) {
   const reportIds = receivedReports.map(r => r.complaint_id)
 
-  complaints = Array.from(complaints).sort((a,b) => {
-    return parseInt(a, 10) - parseInt(b, 10)
+  let response = {}
+
+  response.all = Array.from(complaints).sort((a,b) => {
+    return parseInt(b, 10) - parseInt(a, 10)
   }).map(complaint_id => {
     const complaint = mapping.complaints[complaint_id]
     return {
@@ -206,29 +223,16 @@ function showComplaintsStatus({ complaints, receivedReports, mapping}) {
     }
   })
 
-  const received = complaints.filter(c => c.received)
-  const waiting = complaints.filter(c => !c.received)
+  response.received = response.all.filter(c => c.received)
+  response.waiting = response.all.filter(c => !c.received)
+  response.completed = Boolean(response.waiting.length === 0)
 
-  if (received.length) {
-    console.log('received:')
-    received.forEach(complaint => {
-      console.log("  ", complaint.complaint_id)
-    })
-  }
-
-  if (waiting.length) {
-    console.log('waiting:')
-    waiting.forEach(complaint => {
-      console.log("  ", complaint.complaint_id, complaint.pending?"pending-apu":"")
-    })
-  } else {
-    console.log('complete')
-  }
+  return response
 }
 
 // build a lookup table to match officers from spreadsheet by name/shield
-function generateOfficersByKey(officers) {
-  Object.values(officers).forEach(officer => {
+function generateOfficersByKey() {
+  Object.values(mapping.officers).forEach(officer => {
     let keys = [`${officer.last_name}:${officer.first_name}:${officer.shield_no || 0}`.toUpperCase()]
 
     if (officer.shield_no_history) {
@@ -247,13 +251,22 @@ function generateOfficersByKey(officers) {
   })
 }
 
+async function buildReportHtml() {
+  const source = await fs.readFile('report.hbs')
+  const template = Handlebars.compile(source.toString())
+  const result = template(report)
+
+  await fs.writeFile('report.html', result)
+}
+
 async function start() {
-  const json = await fs.readFile('foil-status-mapping.json')
-  const mapping = JSON.parse(json)
-  generateOfficersByKey(mapping.officers)
+  // load officers and complaint db, and generate an index of officers by name/shield
+  let json = await fs.readFile('foil-status-mapping.json')
+  mapping = JSON.parse(json)
+  generateOfficersByKey()
 
   const receivedReports = await loadReports() // received pdf closing reports
-  const { foils, officers } = await loadRequests(mapping) // FOIL requests and officer ids
+  let { foils, officers } = await loadRequests() // FOIL requests and officer ids
   const foilIds = Array.from(new Set(foils.map(o => o.foil_id))) // foil ids for foils
 
   let complaints = []
@@ -274,9 +287,24 @@ async function start() {
   console.log('Complaint Closing Reports received:', receivedReports.length) // we have reports we did not request from other sources
   console.log('FOIL requests:', foilIds.length)
 
+  report.summary = {
+    officers: officers.length,
+    requested: complaints.length,
+    remaining: remainingReports.length,
+    pending: complaintsPending.length,
+    received: receivedReports.length,
+    foils: foilIds.length
+  }
+
   // per officer, per FOIL info
-  showOfficerStatus({ officers, receivedReports, mapping })
-  showFOILStatus({ foils, receivedReports, mapping })
+  report.officers = getOfficerStatus({ officers, receivedReports })
+  report.foils = getFOILStatus({ foils, receivedReports })
+
+  // await fs.writeFile('report.json', JSON.stringify(report, null, 2))
+  // json = await fs.readFile('report.json')
+  // report = JSON.parse(json)
+
+  await buildReportHtml()
 }
 
 start()

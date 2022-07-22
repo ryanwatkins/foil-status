@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+        integrity="sha384-IJLmUY0f1ePPX6uSCJ9Bxik64/meJmjSYD7dHaJqTXXEBE4y+Oe9P2KBZa/z7p0Q" crossorigin="anonymous">
+  <style>
+    .container.officer {
+      border-top: 1px solid #c0c0c0;
+      margin-bottom: 1em;
+    }
+    .container.officer p.officer {
+      background-color: #f0f0f0;
+      padding: 2px;
+    }
+
+    .container.foil {
+      border-top: 1px solid #c0c0c0;
+      margin-bottom: 1em;
+    }
+    .container.foil p.foil {
+      background-color: #f0f0f0;
+      padding: 2px;
+    }
+    .container.foil p.officers {
+      columns: 3 auto;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    div.received, div.waiting {
+      border-bottom: 1px solid #e0e0e0;
+    }
+    p.complaints {
+      columns: 3 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header></header>
+
+  <section class="section summary">
+    <div class="container">
+    <h2 class="title">CCRB Closing Report Project Report</h2>
+    {{#with summary }}
+    <table class="table">
+      <tbody>
+      <tr><td>Officers requested:</td><td>{{ officers }}</td></tr>
+      <tr><td>Complaints requested:</td><td>{{ requested }}</td></tr>
+      <tr><td>Complaints remaining:</td><td>{{ remaining }}</td></tr>
+      <tr><td>Complaints pending APU:</td><td>{{ pending }}</td></tr>
+      <tr><td>Closing Reports received:</td><td>{{ received }}</td></tr>
+      <tr><td>FOIL requests:</td><td>{{ foils }}</td></tr>
+      </tbody>
+    </table>
+    {{/with }}
+
+    <a href="#officers">view Complaints per Officer</a><br />
+    <a href="#foils">view Complaints per FOIL request</a>
+    <!-- <a href="#reports">view all received Closing Reports</a> -->
+    </div>
+  </section>
+
+  <section class="section officers">
+    <h2 class="title officers"><a name="officers">Officers</a></h2>
+    {{#each officers}}
+    <div class="container officer">
+
+      <p class="officer">
+        <a href="https://www.50-a.org/officer/{{ unique_mos }}">{{ first_name }} {{ last_name }}</a>
+        {{ rank }}
+        {{#if shield_no}}#{{ shield_no }}{{/if }}
+        {{#if complaints.completed }} - <span class="has-text-weight-bold">Completed</span>{{/if }}
+      </p>
+
+      <p>
+        <div class="received">Received ({{ complaints.received.length }})</div>
+        <p class="complaints">
+          {{#each complaints.received }}
+          <a href="https://www.50-a.org/complaint/{{ complaint_id }}"
+            {{#if pending }}title="pending APU trial decision"{{/if }}>
+            {{ complaint_id }}{{#if pending }}*{{/if }}
+          </a>
+          <br />
+          {{/each}}
+        </p>
+        {{#unless complaints.completed }}
+        <div class="waiting">Waiting ({{ complaints.waiting.length }})</div>
+        <p class="complaints">
+          {{#each complaints.waiting }}
+          <a href="https://www.50-a.org/complaint/{{ complaint_id }}"
+            {{#if pending }}title="pending APU trial decision"{{/if }}>
+            {{ complaint_id }}{{#if pending }}*{{/if }}
+          </a>
+          <br />
+          {{/each}}
+        </p>
+        {{/unless }}
+      </p>
+
+    </div>
+    {{/each }}
+  </section>
+
+  <section class="section foils">
+    <h2 class="title foils"><a name="foils">FOILs</a></h2>
+    {{#each foils}}
+    <div class="container foil">
+
+      <p class="foil">
+        {{ foil_id }}
+      </p>
+
+      <p class="officers">
+      {{#each officers}}
+        <a href="https://www.50-a.org/officer/{{ unique_mos }}">{{ first_name }} {{ last_name }}</a><br />
+      {{/each }}
+      </p>
+
+      <p>
+        <div class="received">Received ({{ complaints.received.length }})</div>
+        <p class="complaints">
+        {{#each complaints.received }}
+          <a href="https://www.50-a.org/complaint/{{ complaint_id }}"
+            {{#if pending }}title="pending APU trial decision"{{/if }}>
+            {{ complaint_id }}{{#if pending }}*{{/if }}
+          </a>
+          <br />
+          {{/each}}
+        </p>
+        {{#unless complaints.completed }}
+        <div class="waiting">Waiting ({{ complaints.waiting.length }})</div>
+        <p class="complaints">
+          {{#each complaints.waiting }}
+          <a href="https://www.50-a.org/complaint/{{ complaint_id }}"
+            {{#if pending }}title="pending APU trial decision"{{/if }}>
+            {{ complaint_id }}{{#if pending }}*{{/if }}
+          </a>
+          <br />
+          {{/each}}
+        </p>
+        {{/unless }}
+      </p>
+
+    </div>
+    {{/each }}
+  </section>
+
+  <footer></footer>
+</body>
+</html>
