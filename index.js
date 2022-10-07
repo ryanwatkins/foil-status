@@ -30,6 +30,8 @@ function findOfficer(record) {
     'ALEXANDER:BRIAN:0': '19707',
     'BUTLER:MICHAEL:0': '34930',
     'HENDERSON:ROBERT:0': '80598',
+    'SMITH:THOMAS:0': '53445',
+    'MANNING:THOMAS:0': '53959',
   }
 
   const key = `${record.last_name}:${record.first_name}:${record.shield_no}`
