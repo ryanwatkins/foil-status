@@ -33,6 +33,12 @@ function findOfficer(record) {
     'SMITH:THOMAS:0': '53445',
     'MANNING:THOMAS:0': '53959',
     'MALONEY:KEVIN:0': '12842',
+    'GALLAGHER:KEITH:0': '41044',
+    'HALL:JOHN:0': '36037',
+    'SROUR:FILASTIN:0': '47606',
+    'REILLY:JAMES:0': '62462',
+    'IGLESIAS:MIGUEL:0': '43480',
+    'KELLY:THOMAS:0': '73397',
   }
 
   const key = `${record.last_name}:${record.first_name}:${record.shield_no}`
@@ -117,7 +123,7 @@ async function loadRequests() {
       deadline_date: entry['CCRB Response Deadline'],
       received_date: entry['Received'],
       submitted_date: entry['Submitted Date'],
-      foil_id: entry['FOIL Id'],
+      foil_id: entry['FOIL ID'],
     }
   })
 
