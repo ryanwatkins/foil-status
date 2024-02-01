@@ -7,7 +7,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.6.7",
     "d3": "6.7.0",
     "dotenv": "^16.4.1",
     "handlebars": "^4.7.8"
