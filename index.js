@@ -1,9 +1,9 @@
-const fs = require('fs').promises
-const d3 = require('d3')
-const axios = require('axios').default
-const Handlebars = require('handlebars')
+import * as fs from 'fs'
+import * as d3 from 'd3'
+import axios from 'axios'
+import Handlebars from 'handlebars'
 
-require('dotenv').config()
+import 'dotenv/config'
 
 let officersByKey = new Map() // map of officers by name/shield to unique_mos
 let mapping = {} // officer and complaint data
@@ -261,16 +261,16 @@ function generateOfficersByKey() {
 }
 
 async function buildReportHtml() {
-  const source = await fs.readFile('report.hbs')
+  const source = await fs.promises.readFile('report.hbs')
   const template = Handlebars.compile(source.toString())
   const result = template(report)
 
-  await fs.writeFile('report.html', result)
+  await fs.promises.writeFile('report.html', result)
 }
 
 async function start() {
   // load officers and complaint db, and generate an index of officers by name/shield
-  let json = await fs.readFile('foil-status-mapping.json')
+  let json = await fs.promises.readFile('foil-status-mapping.json')
   mapping = JSON.parse(json)
   generateOfficersByKey()
 
@@ -304,8 +304,8 @@ async function start() {
   report.summary.officersCompleted = report.officers.filter(o => o.complaints.completed).length
   report.summary.foilsCompleted = report.foils.filter(f => f.complaints.completed).length
 
-  // await fs.writeFile('report.json', JSON.stringify(report, null, 2))
-  // json = await fs.readFile('report.json')
+  // await fs.promises.writeFile('report.json', JSON.stringify(report, null, 2))
+  // json = await fs.promises.readFile('report.json')
   // report = JSON.parse(json)
 
   await buildReportHtml()
