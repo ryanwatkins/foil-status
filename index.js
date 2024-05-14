@@ -39,6 +39,11 @@ function findOfficer(record) {
     'REILLY:JAMES:0': '62462',
     'IGLESIAS:MIGUEL:0': '43480',
     'KELLY:THOMAS:0': '73397',
+
+    'RIVERA:EDMUNDO:696': '12979',
+    'PEDRAZA:JAIME:0': '47407',
+    'GREANEY:MICHAEL:7490': '40118',
+    'DELEON:ADRIANO:2580': '24858',
   }
 
   const key = `${record.last_name}:${record.first_name}:${record.shield_no}`
